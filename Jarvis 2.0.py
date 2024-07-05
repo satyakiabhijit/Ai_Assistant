@@ -14,12 +14,13 @@ engine = pyttsx3.init()
 # OpenWeatherMap API key
 api_key = "304530be4e148876f0eb5c9d3fc06a27"
 
+# Assistant's name
+assistant_name = "Jarvis"
 
 # Function to convert text to speech
 def speak(text):
     engine.say(text)
     engine.runAndWait()
-
 
 # Function to listen and recognize speech
 def listen():
@@ -40,7 +41,6 @@ def listen():
             print(f"Sorry, there was an error during speech recognition: {e}")
             return ""
 
-
 # Function to get current location coordinates (latitude and longitude)
 def get_current_location():
     g = geocoder.ip('me')
@@ -48,7 +48,6 @@ def get_current_location():
         return g.latlng[0], g.latlng[1]
     else:
         return None, None
-
 
 # Function to fetch weather data from OpenWeatherMap API based on coordinates
 def fetch_weather(latitude, longitude):
@@ -71,14 +70,32 @@ def fetch_weather(latitude, longitude):
         print(f"Error parsing weather data: {e}")
         speak("Sorry, there was an issue parsing the weather data.")
 
+# Function to list available voices
+def list_voices():
+    voices = engine.getProperty('voices')
+    voice_list = []
+    for index, voice in enumerate(voices):
+        voice_list.append((index, voice.name))
+    return voice_list
 
+# Function to set voice by gender
+def set_voice_by_gender(gender):
+    voices = engine.getProperty('voices')
+    for voice in voices:
+        if gender in voice.name.lower():
+            engine.setProperty('voice', voice.id)
+            return True
+    return False
+
+# Function to process user commands
 def process_command(command):
-    if "hello jarvis" in command:
-        speak("Hello sir! How can I assist you?")
+    global assistant_name
+    if f"hello {assistant_name.lower()}" in command:
+        speak(f"Hello! How can I assist you?")
     elif "what is your name" in command:
-        speak("My name is Jarvis. And I am your virtual assistant.")
+        speak(f"My name is {assistant_name}. I am your virtual assistant.")
     elif "who are you" in command:
-        speak("I am Jarvis, your virtual assistant.")
+        speak(f"I am {assistant_name}, your virtual assistant.")
     elif "how are you" in command:
         speak("I'm doing great! Thanks for asking.")
     elif "who created you" in command:
@@ -137,9 +154,27 @@ def process_command(command):
     elif "thanks" in command or "thank you" in command:
         speak("You're welcome! If you need any more help, feel free to ask.")
         sys.exit()
+    elif "change your name to" in command:
+        new_name = command.split("change your name to ")[-1].strip()
+        assistant_name = new_name
+        speak(f"My name has been changed to {assistant_name}.")
+    elif "list of voices" in command:
+        voices = list_voices()
+        speak("Here are the available voices:")
+        for index, name in voices:
+            speak(f"{index + 1}. {name}")
+    elif "change voice to male" in command:
+        if set_voice_by_gender("male"):
+            speak("Voice has been changed to male.")
+        else:
+            speak("Sorry, no male voices are available.")
+    elif "change voice to female" in command:
+        if set_voice_by_gender("female"):
+            speak("Voice has been changed to female.")
+        else:
+            speak("Sorry, no female voices are available.")
     else:
         speak("Sorry, I didn't understand that command.")
-
 
 # Main program loop
 while True:
