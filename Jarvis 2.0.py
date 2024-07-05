@@ -12,7 +12,7 @@ r = sr.Recognizer()
 engine = pyttsx3.init()
 
 # OpenWeatherMap API key
-api_key = "304530be4e148876f0eb5c9d3fc06a27"
+api_key = "304530be4e148876f0eb5c9d3fc06a27"      # Replace with your OpenWeatherMap API key
 
 # Assistant's name
 assistant_name = "Jarvis"
