@@ -84,6 +84,19 @@ def set_voice_by_gender(gender):
             return True
     return False
 
+#Function to evaluate mathematical expressions saflly
+def evaluate_expression(expression):
+    allowed_chars = "0123456789+-*/(). "
+    if all(char in allowed_chars for char in expression):
+        try:
+            result = eval(expression)
+            return result
+        except Exception as e:
+            return str(e)
+    else:
+        return "Invalid characters in expression."
+
+
 # Function to process user commands
 def process_command(command):
     global assistant_name
