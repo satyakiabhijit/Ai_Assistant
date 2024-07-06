@@ -8,52 +8,49 @@ import requests
 import geocoder
 import os
 
+# Configuration
+API_KEY = "304530be4e148876f0eb5c9d3fc06a27"  # Hardcoded API key
+ASSISTANT_NAME = "Jarvis"
+
 # Initialize the recognizer and TTS engine
-r = sr.Recognizer()
+recognizer = sr.Recognizer()
 engine = pyttsx3.init()
 
-# OpenWeatherMap API key from environment variable (replace with your method of securing the API key)
-api_key = os.getenv('OPENWEATHERMAP_API_KEY')
-
-# Assistant's name
-assistant_name = "Jarvis"
-
-# Function to convert text to speech
 def speak(text):
+    """Convert text to speech."""
     engine.say(text)
     engine.runAndWait()
 
-# Function to listen and recognize speech
 def listen():
+    """Listen for a voice command and return it as text."""
     with sr.Microphone() as source:
         print("Listening...")
-        r.adjust_for_ambient_noise(source)  # Adjust for ambient noise
-        audio = r.listen(source)
-
+        recognizer.adjust_for_ambient_noise(source)
+        audio = recognizer.listen(source)
         try:
             print("Recognizing...")
-            command = r.recognize_google(audio)
+            command = recognizer.recognize_google(audio)
             print(f"User said: {command}")
             return command.lower()
         except sr.UnknownValueError:
             print("Sorry, I didn't get that. Please try again.")
+            speak("Sorry, I didn't get that. Please try again.")
             return ""
         except sr.RequestError as e:
             print(f"Sorry, there was an error during speech recognition: {e}")
+            speak(f"Sorry, there was an error during speech recognition: {e}")
             return ""
 
-# Function to get current location coordinates (latitude and longitude)
 def get_current_location():
+    """Get the current geographic location coordinates."""
     g = geocoder.ip('me')
     if g.latlng:
         return g.latlng[0], g.latlng[1]
-    else:
-        return None, None
+    return None, None
 
-# Function to fetch weather data from OpenWeatherMap API based on coordinates
 def fetch_weather(latitude, longitude):
-    url = f"http://api.openweathermap.org/data/2.5/weather?lat={latitude}&lon={longitude}&appid={api_key}&units=metric"
-
+    """Fetch weather data from OpenWeatherMap API."""
+    url = f"http://api.openweathermap.org/data/2.5/weather?lat={latitude}&lon={longitude}&appid={API_KEY}&units=metric"
     try:
         response = requests.get(url)
         response.raise_for_status()
@@ -69,14 +66,15 @@ def fetch_weather(latitude, longitude):
         print(f"Error parsing weather data: {e}")
         speak("Sorry, there was an issue parsing the weather data.")
 
-# Function to list available voices
 def list_voices():
+    """List available TTS voices."""
     voices = engine.getProperty('voices')
-    voice_list = [(index, voice.name) for index, voice in enumerate(voices)]
-    return voice_list
+    for index, voice in enumerate(voices):
+        print(f"{index + 1}: {voice.name}")
+    return voices
 
-# Function to set voice by gender
 def set_voice_by_gender(gender):
+    """Set TTS voice by gender."""
     voices = engine.getProperty('voices')
     for voice in voices:
         if gender in voice.name.lower():
@@ -84,8 +82,8 @@ def set_voice_by_gender(gender):
             return True
     return False
 
-#Function to evaluate mathematical expressions saflly
 def evaluate_expression(expression):
+    """Evaluate a mathematical expression safely."""
     allowed_chars = "0123456789+-*/(). "
     if all(char in allowed_chars for char in expression):
         try:
@@ -93,19 +91,17 @@ def evaluate_expression(expression):
             return result
         except Exception as e:
             return str(e)
-    else:
-        return "Invalid characters in expression."
+    return "Invalid characters in expression."
 
-
-# Function to process user commands
 def process_command(command):
-    global assistant_name
-    if f"hello {assistant_name.lower()}" in command:
+    """Process a voice command."""
+    global ASSISTANT_NAME
+    if f"hello {ASSISTANT_NAME.lower()}" in command:
         speak("Hello! How can I assist you?")
     elif "what is your name" in command:
-        speak(f"My name is {assistant_name}. I am your virtual assistant.")
+        speak(f"My name is {ASSISTANT_NAME}. I am your virtual assistant.")
     elif "who are you" in command:
-        speak(f"I am {assistant_name}, your virtual assistant.")
+        speak(f"I am {ASSISTANT_NAME}, your virtual assistant.")
     elif "how are you" in command:
         speak("I'm doing great! Thanks for asking.")
     elif "who created you" in command:
@@ -130,7 +126,6 @@ def process_command(command):
         else:
             speak("Sorry, I couldn't determine your current location.")
     elif "tell me a joke" in command:
-        speak("I'm not a comedian, but I can try to make you laugh!")
         jokes = [
             "I found a lion in my closet the other day! When I asked what it was doing there, it said 'Narnia business.'",
             "Why did the scarecrow win an award? Because he was outstanding in his field!",
@@ -165,13 +160,13 @@ def process_command(command):
         speak("You're welcome! If you need any more help, feel free to ask.")
     elif "change your name to" in command:
         new_name = command.split("change your name to ")[-1].strip()
-        assistant_name = new_name
-        speak(f"My name has been changed to {assistant_name}.")
+        ASSISTANT_NAME = new_name
+        speak(f"My name has been changed to {ASSISTANT_NAME}.")
     elif "list of voices" in command:
         voices = list_voices()
         speak("Here are the available voices:")
-        for index, name in voices:
-            speak(f"{index + 1}. {name}")
+        for index, voice in enumerate(voices):
+            speak(f"{index + 1}. {voice.name}")
     elif "change voice to male" in command:
         if set_voice_by_gender("male"):
             speak("Voice has been changed to male.")
@@ -182,11 +177,16 @@ def process_command(command):
             speak("Voice has been changed to female.")
         else:
             speak("Sorry, no female voices are available.")
+    elif "evaluate" in command:
+        expression = command.split("evaluate ")[-1].strip()
+        result = evaluate_expression(expression)
+        speak(f"The result of the expression {expression} is {result}")
     else:
         speak("Sorry, I didn't understand that command.")
 
 # Main program loop
-while True:
-    command = listen()
-    if command:  # Check if command is not empty
-        process_command(command)
+if __name__ == "__main__":
+    while True:
+        command = listen()
+        if command:  # Check if command is not empty
+            process_command(command)
