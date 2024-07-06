@@ -6,13 +6,14 @@ import webbrowser
 import random
 import requests
 import geocoder
+import os
 
 # Initialize the recognizer and TTS engine
 r = sr.Recognizer()
 engine = pyttsx3.init()
 
-# OpenWeatherMap API key
-api_key = "304530be4e148876f0eb5c9d3fc06a27"      # Replace with your OpenWeatherMap API key
+# OpenWeatherMap API key from environment variable (replace with your method of securing the API key)
+api_key = os.getenv('OPENWEATHERMAP_API_KEY')
 
 # Assistant's name
 assistant_name = "Jarvis"
@@ -55,14 +56,12 @@ def fetch_weather(latitude, longitude):
 
     try:
         response = requests.get(url)
-        if response.status_code == 200:
-            data = response.json()
-            weather_description = data["weather"][0]["description"]
-            temperature = data["main"]["temp"]
-            speak(f"The weather is currently {weather_description}.")
-            speak(f"The temperature is {temperature:.1f} degrees Celsius.")
-        else:
-            speak(f"Sorry, I couldn't fetch the weather data. Status code: {response.status_code}")
+        response.raise_for_status()
+        data = response.json()
+        weather_description = data["weather"][0]["description"]
+        temperature = data["main"]["temp"]
+        speak(f"The weather is currently {weather_description}.")
+        speak(f"The temperature is {temperature:.1f} degrees Celsius.")
     except requests.exceptions.RequestException as e:
         print(f"Error fetching weather: {e}")
         speak("Sorry, there was a network error fetching the weather data.")
@@ -73,9 +72,7 @@ def fetch_weather(latitude, longitude):
 # Function to list available voices
 def list_voices():
     voices = engine.getProperty('voices')
-    voice_list = []
-    for index, voice in enumerate(voices):
-        voice_list.append((index, voice.name))
+    voice_list = [(index, voice.name) for index, voice in enumerate(voices)]
     return voice_list
 
 # Function to set voice by gender
@@ -91,7 +88,7 @@ def set_voice_by_gender(gender):
 def process_command(command):
     global assistant_name
     if f"hello {assistant_name.lower()}" in command:
-        speak(f"Hello! How can I assist you?")
+        speak("Hello! How can I assist you?")
     elif "what is your name" in command:
         speak(f"My name is {assistant_name}. I am your virtual assistant.")
     elif "who are you" in command:
@@ -128,7 +125,7 @@ def process_command(command):
             "Why was the math book sad? Because it had too many problems."
         ]
         speak(random.choice(jokes))
-    elif "goodbye" in command or "good bye" in command:
+    elif "goodbye" in command:
         speak("Goodbye! Have a great day!")
         sys.exit()
     elif "open youtube" in command:
@@ -153,7 +150,6 @@ def process_command(command):
             sys.exit()
     elif "thanks" in command or "thank you" in command:
         speak("You're welcome! If you need any more help, feel free to ask.")
-        sys.exit()
     elif "change your name to" in command:
         new_name = command.split("change your name to ")[-1].strip()
         assistant_name = new_name
