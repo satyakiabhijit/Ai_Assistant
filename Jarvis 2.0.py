@@ -7,10 +7,16 @@ import random
 import requests
 import geocoder
 import os
+from sympy import sympify, SympifyError
 
 # Configuration
+<<<<<<< HEAD
 API_KEY = "304530be4e148876f0eb5c9d3fc06a27"  # Hardcoded API key
+ASSISTANT_NAME = "Jarvis"  # Default assistant name
+=======
+API_KEY = "YOUR API KEY"  # Hardcoded API key from OpenWeatherMap
 ASSISTANT_NAME = "Jarvis"
+>>>>>>> 2e2afd2ace1ed29c19d275722dad70e5b312df10
 
 # Initialize the recognizer and TTS engine
 recognizer = sr.Recognizer()
@@ -84,14 +90,112 @@ def set_voice_by_gender(gender):
 
 def evaluate_expression(expression):
     """Evaluate a mathematical expression safely."""
-    allowed_chars = "0123456789+-*/(). "
-    if all(char in allowed_chars for char in expression):
-        try:
-            result = eval(expression)
-            return result
-        except Exception as e:
-            return str(e)
-    return "Invalid characters in expression."
+    try:
+        result = sympify(expression)
+        return result
+    except SympifyError:
+        return "Invalid expression."
+
+
+import random
+
+
+def print_board(board):
+    """
+    Function to print the Tic-Tac-Toe board.
+    """
+    for row in board:
+        print(" | ".join(row))
+        print("-" * 9)
+
+
+def check_win(board, player):
+    """
+    Function to check if the current player has won.
+    """
+    # Check rows
+    for row in board:
+        if all([cell == player for cell in row]):
+            return True
+
+    # Check columns
+    for col in range(3):
+        if all([board[row][col] == player for row in range(3)]):
+            return True
+
+    # Check diagonals
+    if all([board[i][i] == player for i in range(3)]) or \
+            all([board[i][2 - i] == player for i in range(3)]):
+        return True
+
+    return False
+
+
+def is_board_full(board):
+    """
+    Function to check if the board is full.
+    """
+    return all([cell != " " for row in board for cell in row])
+
+
+def ai_move(board, ai_player):
+    """
+    Function for the AI player to make a move.
+    """
+    # Simple strategy: random move
+    while True:
+        row = random.randint(0, 2)
+        col = random.randint(0, 2)
+        if board[row][col] == " ":
+            board[row][col] = ai_player
+            break
+
+
+def tic_tac_toe():
+    """
+    Function to run the Tic-Tac-Toe game with AI.
+    """
+    board = [[" " for _ in range(3)] for _ in range(3)]
+    players = ['X', 'O']
+    current_player = 0
+
+    while True:
+        print_board(board)
+        player = players[current_player]
+
+        if player == 'X':
+            print(f"Player {player}, enter your move (row and column): ")
+            # Get player input
+            while True:
+                try:
+                    row = int(input("Row (1-3): ")) - 1
+                    col = int(input("Column (1-3): ")) - 1
+                    if 0 <= row < 3 and 0 <= col < 3 and board[row][col] == " ":
+                        board[row][col] = player
+                        break
+                    else:
+                        print("Invalid move. Try again.")
+                except ValueError:
+                    print("Invalid input. Please enter a number.")
+        else:
+            print(f"AI Player {player} is making a move...")
+            ai_move(board, player)
+
+        # Check win condition
+        if check_win(board, player):
+            print_board(board)
+            print(f"Congratulations! Player {player} wins!")
+            break
+
+        # Check for draw
+        if is_board_full(board):
+            print_board(board)
+            print("It's a draw!")
+            break
+
+        # Switch players
+        current_player = 1 - current_player
+
 
 def process_command(command):
     """Process a voice command."""
@@ -133,6 +237,20 @@ def process_command(command):
             "Why was the math book sad? Because it had too many problems."
         ]
         speak(random.choice(jokes))
+    elif "give me a motivational quote" in command or "motivate me" in command:
+        quotes = [
+            "Believe in yourself and all that you are.",
+            "The only limit to our realization of tomorrow is our doubts of today.",
+            "The future belongs to those who believe in the beauty of their dreams."
+        ]
+        speak(random.choice(quotes))
+    elif "tell me a fact" in command:
+        facts = [
+            "The shortest war in history lasted only 38 minutes.",
+            "A single cloud can weigh more than 1 million pounds.",
+            "The first oranges weren't orange."
+        ]
+        speak(random.choice(facts))
     elif "goodbye" in command:
         speak("Goodbye! Have a great day!")
         sys.exit()
@@ -181,6 +299,117 @@ def process_command(command):
         expression = command.split("evaluate ")[-1].strip()
         result = evaluate_expression(expression)
         speak(f"The result of the expression {expression} is {result}")
+    elif "i love you" in command:
+        speak("Aww, thank you! I'm here to help you.")
+    elif "open code" in command:
+        speak("Opening Visual Studio Code...")
+        os.system("code")
+    elif "do you love me" in command:
+        speak("I'm here to assist you. I'm not capable of love like humans.")
+    elif "will you marry me" in command:
+        speak("I'm flattered, but I'm not capable of marriage.")
+    elif "who is siri" in command:
+        speak("Siri is a virtual assistant created by Apple Inc.")
+    elif "who is alexa" in command:
+        speak("Alexa is a virtual assistant created by Amazon.")
+    elif "who is cortana" in command:
+        speak("Cortana is a virtual assistant created by Microsoft.")
+    elif "who is google assistant" in command:
+        speak("Google Assistant is a virtual assistant created by Google.")
+    elif "who is jarvis" in command:
+        speak(f"{ASSISTANT_NAME} is a virtual assistant created by Satyaki Abhijit.")
+    elif "set an alarm" in command:
+        speak("Sorry, I'm not capable of setting alarms.")
+    elif "set a timer" in command:
+        speak("Sorry, I'm not capable of setting timers.")
+    elif "set a reminder" in command:
+        speak("What should I remind you about?")
+        reminder = listen()
+        speak("When should I remind you?")
+        reminder_time = listen()  # Here you might want to parse the time and set up a reminder logic
+        speak(f"Reminder set for {reminder_time}: {reminder}")
+    elif "send an email" in command:
+        speak("Sorry, I'm not capable of sending emails.")
+    elif "play a game" in command:
+        speak("Sure, let's play a game. let's play Tic-Tac-Toe.")
+        tic_tac_toe()
+        sys.exit()
+    elif "open calculator" in command:
+        speak("Opening calculator...")
+        os.system("calc")
+        sys.exit()
+    elif "open notepad" in command:
+        speak("Opening Notepad...")
+        os.system("notepad")
+        sys.exit()
+    elif "open command prompt" in command:
+        speak("Opening Command Prompt...")
+        os.system("cmd")
+        sys.exit()
+    elif "what is the capital of" in command:
+        country = command.split("capital of ")[-1].strip()
+        url = f"https://restcountries.com/v3.1/name/{country}"
+        try:
+            response = requests.get(url)
+            response.raise_for_status()
+            data = response.json()
+            capital = data[0]["capital"][0]  # Fixed the key access
+            speak(f"The capital of {country} is {capital}.")
+        except requests.exceptions.RequestException as e:
+            print(f"Error fetching country data: {e}")
+            speak("Sorry, there was a network error fetching the country data.")
+        except (KeyError, IndexError) as e:
+            print(f"Error parsing country data: {e}")
+            speak("Sorry, there was an issue parsing the country data.")
+    elif "play music" in command or "play a song" in command:
+        speak("Playing music on YouTube...")
+        webbrowser.open("https://www.youtube.com/watch?v=5qap5aO4i9A")
+        sys.exit()
+    elif "Who is the prime minister of" in command:
+        country = command.split("prime minister of ")[-1].strip()
+        url = f"https://restcountries.com/v3.1/name/{country}"
+        try:
+            rsponse = requests.get(url)
+            response.raiseraise_for_status()
+            data = response.json()
+            prime_minister = data[0]["government"]["head of state"]
+            speak(f'The prime minister of {country} is {prime_minister}.')
+        except requests.exceptions.RequestException as e:
+            print(f"Error fetching country data: {e}")
+            speak("Sorry, there was a network error fetching the country data.")
+        except (KeyError, IndexError) as e:
+            print(f'Error passing country data: {e}')
+            speak("Sorry there was an error parsing the country data.")
+    elif "Who is the president of" in command:
+        country =command.split("president of ")[-1].strip()
+        url = f"https://restcountries.com/v3.1/name/{country}"
+        try:
+            respose = requests.get(url)
+            response.raiseraise_for_status()
+            data = response.json()
+            president = data[0]["government"]["head of state"]
+            speak(f"The president of {country} is {president}.")
+        except requests.exceptions.RequestException as e:
+            print(f"Error feching country data: {e}")
+            speak("Sorry, there was a network error fetching the country data.")
+        except (KeyError, IndexError) as e:
+            print(f"Error parsing country data: {e}")
+            speak("Sorry, there was an issue parsing the country data.")
+    elif "Who is the founder of" in command:
+        company = command.split("founder of ")[-1].strip()
+        url = f"https://restcountries.com/v3.1/name/{company}"
+        try:
+            response =requests.get(url)
+            response.raiseraise_for_status()
+            data = response.json()
+            founder = data[0]["founder"]
+            speak(f"The founder of {company} is {founder}.")
+        except requests.exceptions.RequestException as e:
+            print (f"Error fetching company data: {e}")
+            speak("Sorry, there was a network error fetching the company data.")
+        except (KeyError, IndexError) as e:
+            print(f"Error parsing company data: {e}")
+            speak("Sorry, there was an issue parsing the company data.")
     else:
         speak("Sorry, I didn't understand that command.")
 
