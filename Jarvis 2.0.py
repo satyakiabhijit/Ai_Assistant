@@ -1,22 +1,18 @@
+import tkinter as tk
+import threading
+import sys
 import datetime
 import pyttsx3
 import speech_recognition as sr
-import sys
 import webbrowser
 import random
 import requests
 import geocoder
-import os
 from sympy import sympify, SympifyError
 
 # Configuration
-<<<<<<< HEAD
 API_KEY = "304530be4e148876f0eb5c9d3fc06a27"  # Hardcoded API key
-ASSISTANT_NAME = "Jarvis"  # Default assistant name
-=======
-API_KEY = "YOUR API KEY"  # Hardcoded API key from OpenWeatherMap
-ASSISTANT_NAME = "Jarvis"
->>>>>>> 2e2afd2ace1ed29c19d275722dad70e5b312df10
+ASSISTANT_NAME = "Friday"  # Default assistant name
 
 # Initialize the recognizer and TTS engine
 recognizer = sr.Recognizer()
@@ -30,20 +26,20 @@ def speak(text):
 def listen():
     """Listen for a voice command and return it as text."""
     with sr.Microphone() as source:
-        print("Listening...")
+        update_output("Listening...")
         recognizer.adjust_for_ambient_noise(source)
         audio = recognizer.listen(source)
         try:
-            print("Recognizing...")
+            update_output("Recognizing...")
             command = recognizer.recognize_google(audio)
-            print(f"User said: {command}")
+            update_output(f"User said: {command}")
             return command.lower()
         except sr.UnknownValueError:
-            print("Sorry, I didn't get that. Please try again.")
+            update_output("Sorry, I didn't get that. Please try again.")
             speak("Sorry, I didn't get that. Please try again.")
             return ""
         except sr.RequestError as e:
-            print(f"Sorry, there was an error during speech recognition: {e}")
+            update_output(f"Sorry, there was an error during speech recognition: {e}")
             speak(f"Sorry, there was an error during speech recognition: {e}")
             return ""
 
@@ -66,17 +62,17 @@ def fetch_weather(latitude, longitude):
         speak(f"The weather is currently {weather_description}.")
         speak(f"The temperature is {temperature:.1f} degrees Celsius.")
     except requests.exceptions.RequestException as e:
-        print(f"Error fetching weather: {e}")
+        update_output(f"Error fetching weather: {e}")
         speak("Sorry, there was a network error fetching the weather data.")
     except KeyError as e:
-        print(f"Error parsing weather data: {e}")
+        update_output(f"Error parsing weather data: {e}")
         speak("Sorry, there was an issue parsing the weather data.")
 
 def list_voices():
     """List available TTS voices."""
     voices = engine.getProperty('voices')
     for index, voice in enumerate(voices):
-        print(f"{index + 1}: {voice.name}")
+        update_output(f"{index + 1}: {voice.name}")
     return voices
 
 def set_voice_by_gender(gender):
@@ -96,105 +92,102 @@ def evaluate_expression(expression):
     except SympifyError:
         return "Invalid expression."
 
+def start_tic_tac_toe():
+    """Start the Tic-Tac-Toe game."""
+    game_window = tk.Toplevel(root)
+    game_window.title("Tic-Tac-Toe")
 
-import random
+    def reset_board():
+        for row in range(3):
+            for col in range(3):
+                buttons[row][col].config(text="", state=tk.NORMAL)
+        current_player[0] = "X"
+        update_status()
 
+    def update_status():
+        status_label.config(text=f"Player {current_player[0]}'s turn")
 
-def print_board(board):
-    """
-    Function to print the Tic-Tac-Toe board.
-    """
-    for row in board:
-        print(" | ".join(row))
-        print("-" * 9)
-
-
-def check_win(board, player):
-    """
-    Function to check if the current player has won.
-    """
-    # Check rows
-    for row in board:
-        if all([cell == player for cell in row]):
+    def check_win():
+        for row in range(3):
+            if all(buttons[row][col]['text'] == current_player[0] for col in range(3)):
+                return True
+        for col in range(3):
+            if all(buttons[row][col]['text'] == current_player[0] for row in range(3)):
+                return True
+        if all(buttons[i][i]['text'] == current_player[0] for i in range(3)) or \
+                all(buttons[i][2 - i]['text'] == current_player[0] for i in range(3)):
             return True
+        return False
 
-    # Check columns
-    for col in range(3):
-        if all([board[row][col] == player for row in range(3)]):
-            return True
+    def is_board_full():
+        return all(buttons[row][col]['text'] != "" for row in range(3) for col in range(3))
 
-    # Check diagonals
-    if all([board[i][i] == player for i in range(3)]) or \
-            all([board[i][2 - i] == player for i in range(3)]):
-        return True
+    def on_button_click(row, col):
+        if buttons[row][col]['text'] == "" and current_player[0]:
+            buttons[row][col].config(text=current_player[0])
+            if check_win():
+                status_label.config(text=f"Player {current_player[0]} wins!")
+                disable_buttons()
+            elif is_board_full():
+                status_label.config(text="It's a draw!")
+                disable_buttons()
+            else:
+                current_player[0] = "O" if current_player[0] == "X" else "X"
+                update_status()
+                if game_mode[0] == "single" and current_player[0] == "O":
+                    ai_move()
 
-    return False
+    def disable_buttons():
+        for row in range(3):
+            for col in range(3):
+                buttons[row][col].config(state=tk.DISABLED)
 
+    def ai_move():
+        empty_cells = [(row, col) for row in range(3) for col in range(3) if buttons[row][col]['text'] == ""]
+        if empty_cells:
+            row, col = random.choice(empty_cells)
+            buttons[row][col].config(text="O")
+            if check_win():
+                status_label.config(text="Player O (AI) wins!")
+                disable_buttons()
+            elif is_board_full():
+                status_label.config(text="It's a draw!")
+                disable_buttons()
+            else:
+                current_player[0] = "X"
+                update_status()
 
-def is_board_full(board):
-    """
-    Function to check if the board is full.
-    """
-    return all([cell != " " for row in board for cell in row])
+    def select_mode(mode):
+        game_mode[0] = mode
+        start_game()
 
+    def start_game():
+        global status_label
+        for widget in game_window.winfo_children():
+            widget.destroy()
 
-def ai_move(board, ai_player):
-    """
-    Function for the AI player to make a move.
-    """
-    # Simple strategy: random move
-    while True:
-        row = random.randint(0, 2)
-        col = random.randint(0, 2)
-        if board[row][col] == " ":
-            board[row][col] = ai_player
-            break
+        for row in range(3):
+            for col in range(3):
+                buttons[row][col] = tk.Button(game_window, text="", font='Arial 20', width=5, height=2,
+                                              command=lambda r=row, c=col: on_button_click(r, c))
+                buttons[row][col].grid(row=row, column=col)
 
+        status_label = tk.Label(game_window, text="Player X's turn", font='Arial 15')
+        status_label.grid(row=3, column=0, columnspan=3)
 
-def tic_tac_toe():
-    """
-    Function to run the Tic-Tac-Toe game with AI.
-    """
-    board = [[" " for _ in range(3)] for _ in range(3)]
-    players = ['X', 'O']
-    current_player = 0
+        reset_button = tk.Button(game_window, text="Reset", font='Arial 15', command=reset_board)
+        reset_button.grid(row=4, column=0, columnspan=3)
 
-    while True:
-        print_board(board)
-        player = players[current_player]
+        update_status()
 
-        if player == 'X':
-            print(f"Player {player}, enter your move (row and column): ")
-            # Get player input
-            while True:
-                try:
-                    row = int(input("Row (1-3): ")) - 1
-                    col = int(input("Column (1-3): ")) - 1
-                    if 0 <= row < 3 and 0 <= col < 3 and board[row][col] == " ":
-                        board[row][col] = player
-                        break
-                    else:
-                        print("Invalid move. Try again.")
-                except ValueError:
-                    print("Invalid input. Please enter a number.")
-        else:
-            print(f"AI Player {player} is making a move...")
-            ai_move(board, player)
+    buttons = [[None for _ in range(3)] for _ in range(3)]
+    current_player = ["X"]
+    game_mode = [""]
 
-        # Check win condition
-        if check_win(board, player):
-            print_board(board)
-            print(f"Congratulations! Player {player} wins!")
-            break
+    tk.Label(game_window, text="Select Game Mode", font='Arial 15').pack()
+    tk.Button(game_window, text="Single Player", font='Arial 15', command=lambda: select_mode("single")).pack()
+    tk.Button(game_window, text="Multiplayer", font='Arial 15', command=lambda: select_mode("multi")).pack()
 
-        # Check for draw
-        if is_board_full(board):
-            print_board(board)
-            print("It's a draw!")
-            break
-
-        # Switch players
-        current_player = 1 - current_player
 
 
 def process_command(command):
@@ -251,171 +244,93 @@ def process_command(command):
             "The first oranges weren't orange."
         ]
         speak(random.choice(facts))
-    elif "goodbye" in command:
+    elif "goodbye" in command or "exit" in command or "bye" in command:
         speak("Goodbye! Have a great day!")
+        root.destroy()
         sys.exit()
     elif "open youtube" in command:
         speak("Opening YouTube...")
         webbrowser.open("https://www.youtube.com")
         sys.exit()
-    elif "search on youtube" in command:
-        speak("What would you like to search for on YouTube?")
-        search_query = listen()
-        if search_query:
-            speak(f"Searching for {search_query} on YouTube...")
-            search_url = f"https://www.youtube.com/results?search_query={search_query}"
-            webbrowser.open(search_url)
-            sys.exit()
-    elif "search on google" in command:
-        speak("What would you like to search for on Google?")
-        search_query = listen()
-        if search_query:
-            speak(f"Searching for {search_query} on Google...")
-            search_url = f"https://www.google.com/search?q={search_query}"
-            webbrowser.open(search_url)
-            sys.exit()
-    elif "thanks" in command or "thank you" in command:
-        speak("You're welcome! If you need any more help, feel free to ask.")
-    elif "change your name to" in command:
-        new_name = command.split("change your name to ")[-1].strip()
+    elif "open google" in command:
+        speak("Opening Google...")
+        webbrowser.open("https://www.google.com")
+        sys.exit()
+    elif "open facebook" in command:
+        speak("Opening Facebook...")
+        webbrowser.open("https://www.facebook.com")
+        sys.exit()
+    elif "evaluate" in command:
+        expression = command.replace("evaluate", "").strip()
+        result = evaluate_expression(expression)
+        speak(f"The result is {result}")
+    elif "list voices" in command:
+        speak("Listing available voices:")
+        list_voices()
+    elif "set voice to male" in command:
+        if set_voice_by_gender("male"):
+            speak("Voice set to male.")
+        else:
+            speak("Male voice not found.")
+    elif "set voice to female" in command:
+        if set_voice_by_gender("female"):
+            speak("Voice set to female.")
+        else:
+            speak("Female voice not found.")
+    elif "change name to" in command:
+        new_name = command.replace("change name to", "").strip()
         ASSISTANT_NAME = new_name
         speak(f"My name has been changed to {ASSISTANT_NAME}.")
-    elif "list of voices" in command:
-        voices = list_voices()
-        speak("Here are the available voices:")
-        for index, voice in enumerate(voices):
-            speak(f"{index + 1}. {voice.name}")
-    elif "change voice to male" in command:
-        if set_voice_by_gender("male"):
-            speak("Voice has been changed to male.")
-        else:
-            speak("Sorry, no male voices are available.")
-    elif "change voice to female" in command:
-        if set_voice_by_gender("female"):
-            speak("Voice has been changed to female.")
-        else:
-            speak("Sorry, no female voices are available.")
-    elif "evaluate" in command:
-        expression = command.split("evaluate ")[-1].strip()
-        result = evaluate_expression(expression)
-        speak(f"The result of the expression {expression} is {result}")
-    elif "i love you" in command:
-        speak("Aww, thank you! I'm here to help you.")
-    elif "open code" in command:
-        speak("Opening Visual Studio Code...")
-        os.system("code")
-    elif "do you love me" in command:
-        speak("I'm here to assist you. I'm not capable of love like humans.")
-    elif "will you marry me" in command:
-        speak("I'm flattered, but I'm not capable of marriage.")
-    elif "who is siri" in command:
-        speak("Siri is a virtual assistant created by Apple Inc.")
-    elif "who is alexa" in command:
-        speak("Alexa is a virtual assistant created by Amazon.")
-    elif "who is cortana" in command:
-        speak("Cortana is a virtual assistant created by Microsoft.")
-    elif "who is google assistant" in command:
-        speak("Google Assistant is a virtual assistant created by Google.")
-    elif "who is jarvis" in command:
-        speak(f"{ASSISTANT_NAME} is a virtual assistant created by Satyaki Abhijit.")
-    elif "set an alarm" in command:
-        speak("Sorry, I'm not capable of setting alarms.")
-    elif "set a timer" in command:
-        speak("Sorry, I'm not capable of setting timers.")
-    elif "set a reminder" in command:
-        speak("What should I remind you about?")
-        reminder = listen()
-        speak("When should I remind you?")
-        reminder_time = listen()  # Here you might want to parse the time and set up a reminder logic
-        speak(f"Reminder set for {reminder_time}: {reminder}")
-    elif "send an email" in command:
-        speak("Sorry, I'm not capable of sending emails.")
-    elif "play a game" in command:
-        speak("Sure, let's play a game. let's play Tic-Tac-Toe.")
-        tic_tac_toe()
+    elif "play tic_tac_toe" in command or "play a game" in command:
+        speak("Starting Tic-Tac-Toe game...")
+        start_tic_tac_toe()
         sys.exit()
-    elif "open calculator" in command:
-        speak("Opening calculator...")
-        os.system("calc")
+    elif "thank you" in command or "thanks" in command:
+        speak("You're welcome!")
+        root.destroy()
         sys.exit()
-    elif "open notepad" in command:
-        speak("Opening Notepad...")
-        os.system("notepad")
-        sys.exit()
-    elif "open command prompt" in command:
-        speak("Opening Command Prompt...")
-        os.system("cmd")
-        sys.exit()
-    elif "what is the capital of" in command:
-        country = command.split("capital of ")[-1].strip()
-        url = f"https://restcountries.com/v3.1/name/{country}"
-        try:
-            response = requests.get(url)
-            response.raise_for_status()
-            data = response.json()
-            capital = data[0]["capital"][0]  # Fixed the key access
-            speak(f"The capital of {country} is {capital}.")
-        except requests.exceptions.RequestException as e:
-            print(f"Error fetching country data: {e}")
-            speak("Sorry, there was a network error fetching the country data.")
-        except (KeyError, IndexError) as e:
-            print(f"Error parsing country data: {e}")
-            speak("Sorry, there was an issue parsing the country data.")
-    elif "play music" in command or "play a song" in command:
-        speak("Playing music on YouTube...")
-        webbrowser.open("https://www.youtube.com/watch?v=5qap5aO4i9A")
-        sys.exit()
-    elif "Who is the prime minister of" in command:
-        country = command.split("prime minister of ")[-1].strip()
-        url = f"https://restcountries.com/v3.1/name/{country}"
-        try:
-            rsponse = requests.get(url)
-            response.raiseraise_for_status()
-            data = response.json()
-            prime_minister = data[0]["government"]["head of state"]
-            speak(f'The prime minister of {country} is {prime_minister}.')
-        except requests.exceptions.RequestException as e:
-            print(f"Error fetching country data: {e}")
-            speak("Sorry, there was a network error fetching the country data.")
-        except (KeyError, IndexError) as e:
-            print(f'Error passing country data: {e}')
-            speak("Sorry there was an error parsing the country data.")
-    elif "Who is the president of" in command:
-        country =command.split("president of ")[-1].strip()
-        url = f"https://restcountries.com/v3.1/name/{country}"
-        try:
-            respose = requests.get(url)
-            response.raiseraise_for_status()
-            data = response.json()
-            president = data[0]["government"]["head of state"]
-            speak(f"The president of {country} is {president}.")
-        except requests.exceptions.RequestException as e:
-            print(f"Error feching country data: {e}")
-            speak("Sorry, there was a network error fetching the country data.")
-        except (KeyError, IndexError) as e:
-            print(f"Error parsing country data: {e}")
-            speak("Sorry, there was an issue parsing the country data.")
-    elif "Who is the founder of" in command:
-        company = command.split("founder of ")[-1].strip()
-        url = f"https://restcountries.com/v3.1/name/{company}"
-        try:
-            response =requests.get(url)
-            response.raiseraise_for_status()
-            data = response.json()
-            founder = data[0]["founder"]
-            speak(f"The founder of {company} is {founder}.")
-        except requests.exceptions.RequestException as e:
-            print (f"Error fetching company data: {e}")
-            speak("Sorry, there was a network error fetching the company data.")
-        except (KeyError, IndexError) as e:
-            print(f"Error parsing company data: {e}")
-            speak("Sorry, there was an issue parsing the company data.")
+    elif "help" in command or "what can you do" in command:
+        speak("You can ask me the current time, date, weather, or to evaluate a mathematical expression.")
+        start_voice_assistant()
     else:
         speak("Sorry, I didn't understand that command.")
 
-# Main program loop
-if __name__ == "__main__":
+def start_voice_assistant():
+    """Start the voice assistant."""
     while True:
         command = listen()
-        if command:  # Check if command is not empty
+        if command:
             process_command(command)
+
+def update_output(message):
+    """Update the output box with a new message."""
+    output_box.config(state=tk.NORMAL)
+    output_box.insert(tk.END, message + "\n")
+    output_box.config(state=tk.DISABLED)
+    output_box.see(tk.END)
+
+def on_close():
+    """Handle closing the GUI."""
+    root.destroy()
+    sys.exit()
+
+# Initialize the main GUI window
+root = tk.Tk()
+root.title("Voice Assistant")
+
+# Output box for displaying messages
+output_box = tk.Text(root, state=tk.DISABLED, height=20, width=50)
+output_box.pack(padx=10, pady=10)
+
+# Close button
+close_button = tk.Button(root, text="Close", command=on_close)
+close_button.pack(pady=10)
+
+# Start the voice assistant in a separate thread
+assistant_thread = threading.Thread(target=start_voice_assistant)
+assistant_thread.daemon = True
+assistant_thread.start()
+
+# Start the Tkinter event loop
+root.protocol("WM_DELETE_WINDOW", on_close)
+root.mainloop()
