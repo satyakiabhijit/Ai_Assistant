@@ -11,7 +11,7 @@
 
 - 📫 How to reach me **abhijitsatyaki29@gmail.com**
 
-- 📄 Know about my experiences [https://drive.google.com/file/d/1IGt25M-LzlBOEWRLTvBS38BAbLSjJPZB/view?pli=1](https://drive.google.com/file/d/1IGt25M-LzlBOEWRLTvBS38BAbLSjJPZB/view?pli=1)
+- 📄 Know about my experiences [Resume]([https://drive.google.com/file/d/1IGt25M-LzlBOEWRLTvBS38BAbLSjJPZB/view?pli=1](https://drive.google.com/file/d/1i9QJn_kqxgC0qQvQ5tq8swU60b5GFfio/view?usp=sharing))
 
 <h3 align="left">Connect with me:</h3>
 <p align="left">
